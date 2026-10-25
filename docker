@@ -1,0 +1,907 @@
+
+yar mana ik complete docker commands do ta ka kal mera lab mid ha agar docker ma ksis bhi kism ka question ay tu ma dekh ka lo
+Bilkul yar 👍 Kal mid hai, to main tumhein Docker ka complete practical command cheat sheet de raha hoon — basic se le kar images, containers, Dockerfile, volumes, networks, Compose, 3-tier app, troubleshooting tak.
+
+Isko save kar lo. Lab mein question aaye to mostly isi mein se command mil jayegi.
+
+🐳 Docker Complete Lab Command Sheet
+1. Docker Check / Version
+docker --version
+docker version
+docker info
+Check Docker service:
+
+sudo systemctl status docker
+Start Docker:
+
+sudo systemctl start docker
+Enable Docker at boot:
+
+sudo systemctl enable docker
+Restart Docker:
+
+sudo systemctl restart docker
+
+2. Docker Images
+Download image from Docker Hub
+docker pull nginx
+
+Specific version:
+
+docker pull nginx:latest
+
+docker pull nginx:1.25
+
+List images:
+
+docker images
+
+or:
+
+docker image ls
+
+Remove image:
+
+docker rmi nginx
+
+Force remove:
+
+docker rmi -f nginx
+
+Remove unused images:
+
+docker image prune
+
+Remove all unused images:
+
+docker image prune -a
+
+3. Docker Containers
+Create and run container
+docker run nginx
+
+Usually you want background mode:
+
+docker run -d nginx
+
+Give container a name:
+
+docker run -d --name mynginx nginx
+
+Run with port:
+
+docker run -d --name mynginx -p 8080:80 nginx
+
+Meaning:
+
+-p HOST_PORT:CONTAINER_PORT
+
+8080:80
+Browser:
+
+http://SERVER-IP:8080
+4. List Containers
+Running containers:
+
+docker ps
+
+All containers:
+
+docker ps -a
+
+Only container IDs:
+
+docker ps -q
+
+5. Start / Stop / Restart
+Start:
+
+docker start mynginx
+
+Stop:
+
+docker stop mynginx
+
+Restart:
+
+docker restart mynginx
+
+Pause:
+
+docker pause mynginx
+
+Unpause:
+
+docker unpause mynginx
+
+6. Remove Containers
+Remove stopped container:
+
+docker rm mynginx
+
+Force remove running container:
+
+docker rm -f mynginx
+
+Remove all stopped containers:
+
+docker container prune
+
+7. Container Logs
+Very important for troubleshooting:
+
+docker logs mynginx
+
+Live logs:
+
+docker logs -f mynginx
+
+Last 50 lines:
+
+docker logs --tail 50 mynginx
+
+8. Inspect Container
+Complete information:
+
+docker inspect mynginx
+
+Container IP:
+
+docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mynginx
+
+9. Execute Commands Inside Container
+Open Bash:
+
+docker exec -it mynginx bash
+
+If Bash doesn't exist:
+
+docker exec -it mynginx sh
+
+Then inside:
+
+ls
+
+pwd
+
+cd /usr/share/nginx/html
+
+Exit:
+
+exit
+
+Run a single command without entering:
+
+docker exec mynginx ls
+
+10. Container Resource Usage
+docker stats
+
+Specific container:
+
+docker stats mynginx
+
+11. Docker Run Important Options
+Name
+docker run --name web nginx
+
+Detached
+docker run -d nginx
+
+Port
+docker run -d -p 8080:80 nginx
+
+Environment variable
+docker run -d -e MYSQL_ROOT_PASSWORD=1234 mysql
+
+Automatically restart
+docker run -d --restart unless-stopped nginx
+
+Interactive terminal
+docker run -it ubuntu bash
+
+Remove container automatically after exit
+docker run --rm ubuntu
+
+12. Dockerfile
+Create file:
+
+nano Dockerfile
+
+Example:
+
+FROM nginx:latest
+
+COPY index.html /usr/share/nginx/html/index.html
+
+EXPOSE 80
+
+Create HTML:
+
+nano index.html
+
+Example:
+
+<h1>Hello Docker</h1>
+
+Build image:
+
+docker build -t myweb .
+
+Check:
+
+docker images
+
+Run:
+
+docker run -d --name mywebcontainer -p 8080:80 myweb
+
+Open:
+
+http://SERVER-IP:8080
+13. Custom Dockerfile Name
+If file is called df instead of Dockerfile:
+
+docker build -f df -t myapp .
+
+Run:
+
+docker run -d --name myapp-container -p 8080:80 myapp
+
+Remember
+-f
+means Dockerfile name.
+
+-t
+means image tag/name.
+
+.
+means current directory is the build context.
+
+14. Important Dockerfile Instructions
+FROM
+
+Base image.
+
+WORKDIR
+
+Working directory.
+
+COPY
+
+Copy files from host into image.
+
+ADD
+
+Similar to COPY, with additional archive/URL behavior.
+
+RUN
+
+Execute command while building image.
+
+CMD
+
+Default command when container starts.
+
+ENTRYPOINT
+
+Main executable/entry point.
+
+EXPOSE
+
+Documents the port used by the application.
+
+Example:
+
+FROM python:3.12
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install -r requirements.txt
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]
+
+15. Docker Image vs Container
+Remember this for viva:
+
+Dockerfile
+    ↓
+docker build
+    ↓
+Docker Image
+    ↓
+docker run
+    ↓
+Container
+Image = blueprint/template
+
+Container = running instance of image
+
+Example:
+
+docker build -t myapp .
+
+creates image.
+
+Then:
+
+docker run myapp
+
+creates container from that image.
+
+16. Docker Volumes
+List volumes:
+
+docker volume ls
+
+Create named volume:
+
+docker volume create myvolume
+
+Inspect:
+
+docker volume inspect myvolume
+
+Use volume:
+
+docker run -d \
+  --name mysql \
+  -v myvolume:/var/lib/mysql \
+  mysql:8.4
+
+Format:
+
+-v VOLUME_NAME:CONTAINER_PATH
+Example:
+
+-v myvolume:/var/lib/mysql
+Remove volume:
+
+docker volume rm myvolume
+
+Remove unused volumes:
+
+docker volume prune
+
+17. Bind Mount
+Host folder:
+
+mkdir website
+
+Run:
+
+docker run -d \
+  --name nginx \
+  -p 8080:80 \
+  -v $(pwd)/website:/usr/share/nginx/html \
+  nginx
+
+Meaning:
+
+HOST DIRECTORY
+      ↓
+$(pwd)/website
+      :
+      ↓
+CONTAINER DIRECTORY
+/usr/share/nginx/html
+Changes on host appear inside container.
+
+18. Anonymous Volume
+docker run -d \
+  -v /var/lib/mysql \
+  mysql:8.4
+
+Docker creates the volume automatically.
+
+19. Docker Networks
+List:
+
+docker network ls
+
+Create network:
+
+docker network create mynetwork
+
+Inspect:
+
+docker network inspect mynetwork
+
+Run container on network:
+
+docker run -d \
+  --name web \
+  --network mynetwork \
+  nginx
+
+Another container:
+
+docker run -d \
+  --name app \
+  --network mynetwork \
+  nginx
+
+Now containers can communicate using container names.
+
+For example:
+
+web
+can be used as hostname.
+
+20. Connect Existing Container to Network
+docker network connect mynetwork mycontainer
+
+Disconnect:
+
+docker network disconnect mynetwork mycontainer
+
+Remove network:
+
+docker network rm mynetwork
+
+21. Docker Hub
+Login:
+
+docker login
+
+Tag image:
+
+docker tag myapp username/myapp:v1
+
+Push:
+
+docker push username/myapp:v1
+
+Pull:
+
+docker pull username/myapp:v1
+
+22. Docker Compose
+Check Compose:
+
+docker compose version
+
+Create:
+
+nano compose.yaml
+
+Example:
+
+services:
+
+  web:
+    image: nginx
+    ports:
+      - "8080:80"
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user123
+
+Start:
+
+docker compose up -d
+
+Check:
+
+docker compose ps
+
+Logs:
+
+docker compose logs
+
+Live logs:
+
+docker compose logs -f
+
+Stop:
+
+docker compose stop
+
+Start again:
+
+docker compose start
+
+Restart:
+
+docker compose restart
+
+Stop and remove containers/network:
+
+docker compose down
+
+Remove containers + volumes:
+
+docker compose down -v
+
+Build and start:
+
+docker compose up -d --build
+
+23. Three-Tier Docker Compose
+This is very important for lab.
+
+Architecture:
+
+          USER
+           |
+           ↓
+     ┌────────────┐
+     │  FRONTEND  │
+     │   NGINX    │
+     └──────┬─────┘
+            |
+            ↓
+     ┌────────────┐
+     │  BACKEND   │
+     │  PHP/API   │
+     └──────┬─────┘
+            |
+            ↓
+     ┌────────────┐
+     │  DATABASE  │
+     │   MYSQL    │
+     └────────────┘
+Example Compose:
+
+services:
+
+  frontend:
+    image: nginx
+    ports:
+      - "8080:80"
+    networks:
+      - app_network
+
+  backend:
+    image: php:8.3-apache
+    networks:
+      - app_network
+
+  database:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: appdb
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: app123
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app_network
+
+networks:
+  app_network:
+
+volumes:
+  db_data:
+
+Start:
+
+docker compose up -d
+
+Check:
+
+docker compose ps
+
+24. WordPress + MySQL Compose
+Very common practical question.
+
+services:
+
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wp123
+      MYSQL_ROOT_PASSWORD: root123
+    volumes:
+      - db_data:/var/lib/mysql
+
+  wordpress:
+    image: wordpress:latest
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wp123
+      WORDPRESS_DB_NAME: wordpress
+    depends_on:
+      - db
+
+volumes:
+  db_data:
+
+Run:
+
+docker compose up -d
+
+Check:
+
+docker compose ps
+
+Browser:
+
+http://SERVER-IP:8080
+25. Docker Compose YAML Important Parts
+services
+Defines containers.
+
+services:
+
+image
+Which image to use.
+
+image: nginx
+
+ports
+Host → Container.
+
+ports:
+  - "8080:80"
+
+environment
+Environment variables.
+
+environment:
+  MYSQL_ROOT_PASSWORD: root123
+
+volumes
+Persistent storage.
+
+volumes:
+  - db_data:/var/lib/mysql
+
+networks
+Container communication.
+
+networks:
+  - app_network
+
+depends_on
+Startup dependency.
+
+depends_on:
+  - db
+
+26. Copy Files Between Host and Container
+Host → container:
+
+docker cp index.html mynginx:/usr/share/nginx/html/
+
+Container → host:
+
+docker cp mynginx:/usr/share/nginx/html/index.html .
+
+27. Rename Container
+docker rename oldname newname
+
+28. Container Port Check
+docker port mynginx
+
+Example output:
+
+80/tcp -> 0.0.0.0:8080
+29. Processes Running Inside Container
+docker top mynginx
+
+30. Docker System Information
+docker system df
+
+Clean unused Docker resources:
+
+docker system prune
+
+More aggressive:
+
+docker system prune -a
+
+With volumes:
+
+docker system prune -a --volumes
+
+⚠️ Be careful: this can delete unused images, containers, networks and volumes.
+
+31. Remove EVERYTHING — Lab Cleanup
+Stop all containers
+docker stop $(docker ps -q)
+
+Remove all containers
+docker rm $(docker ps -aq)
+
+Remove all images
+docker rmi $(docker images -q)
+
+If conflicts occur:
+
+docker rm -f $(docker ps -aq)
+
+Then:
+
+docker rmi -f $(docker images -q)
+
+Full cleanup:
+
+docker system prune -a --volumes
+
+32. Troubleshooting Commands
+Container immediately stopped
+docker ps -a
+
+Then:
+
+docker logs container_name
+
+Check configuration
+docker inspect container_name
+
+Check ports
+docker port container_name
+
+Check networks
+docker network ls
+
+docker network inspect network_name
+
+Check volumes
+docker volume ls
+
+docker volume inspect volume_name
+
+Check Docker service
+sudo systemctl status docker
+
+33. Permission Error
+If you get:
+
+permission denied while trying to connect to Docker daemon
+Use:
+
+sudo docker ps
+
+For permanent Docker access:
+
+sudo usermod -aG docker $USER
+
+Then logout/login or:
+
+newgrp docker
+
+Test:
+
+docker ps
+
+34. Common Docker Lab Questions
+Q: Pull nginx image
+docker pull nginx
+
+Q: Run nginx in background
+docker run -d nginx
+
+Q: Run nginx on port 8080
+docker run -d -p 8080:80 nginx
+
+Q: Give container a name
+docker run -d --name web nginx
+
+Q: See running containers
+docker ps
+
+Q: See all containers
+docker ps -a
+
+Q: Stop container
+docker stop web
+
+Q: Remove container
+docker rm web
+
+Q: Enter container
+docker exec -it web bash
+
+Q: See logs
+docker logs web
+
+Q: Create image from Dockerfile
+docker build -t myimage .
+
+Q: Run custom image
+docker run -d --name mycontainer -p 8080:80 myimage
+
+Q: Create volume
+docker volume create myvolume
+
+Q: Create network
+docker network create mynetwork
+
+Q: Start Compose
+docker compose up -d
+
+Q: Stop Compose
+docker compose down
+
+Q: See Compose containers
+docker compose ps
+
+🧠 Most Important Things to Memorize Tonight
+If time is short, at least memorize these:
+
+docker pull nginx
+docker images
+docker run -d --name web -p 8080:80 nginx
+docker ps
+docker ps -a
+docker stop web
+docker start web
+docker restart web
+docker rm web
+docker rm -f web
+docker logs web
+docker exec -it web bash
+docker inspect web
+docker build -t myimage .
+docker run -d --name app -p 8080:80 myimage
+docker volume create myvolume
+docker volume ls
+docker network create mynetwork
+docker network ls
+docker compose up -d
+docker compose ps
+docker compose logs
+docker compose down
+docker compose down -v
+docker system df
+docker system prune -a
+
+And remember this flow:
+                 DOCKER LAB
+
+Dockerfile
+    │
+    │ docker build
+    ↓
+ Docker Image
+    │
+    │ docker run
+    ↓
+ Container
+    │
+    ├── docker exec
+    ├── docker logs
+    ├── docker inspect
+    ├── docker stop
+    └── docker rm
+
+Container
+    │
+    ├── Volume → persistent data
+    └── Network → container communication
+
+docker-compose.yml
+    │
+    │ docker compose up
+    ↓
+Multiple Containers
+    │
+    ├── Frontend
+    ├── Backend
+    └── Database
+Sab se important concept: Image → Container, Volume → data persistence, Network → container communication, Compose → multiple containers, Dockerfile → custom image.
+
+
+
+
